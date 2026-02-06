@@ -33,30 +33,13 @@ def rest_db():
     connection = sqlite3.connect("restaurant.db")
     cursor = connection.cursor()
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            tg_id INTEGER PRIMARY KEY,
-            name TEXT
-        )
-    """)
+    cursor.execute("""CREATE TABLE IF NOT EXISTS users (tg_id INTEGER PRIMARY KEY, name TEXT)""")
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS tables (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            is_free INTEGER
-        )
-    """)
+    cursor.execute("""CREATE TABLE IF NOT EXISTS tables (id INTEGER PRIMARY KEY AUTOINCREMENT, is_free INTEGER)""")
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS orders (
-            user_id INTEGER,
-            table_id INTEGER,
-            order_text TEXT
-        )
-    """)
+    cursor.execute("""CREATE TABLE IF NOT EXISTS orders (user_id INTEGER, table_id INTEGER, order_text TEXT)""")
 
     connection.commit()
-    connection.close()
 
 rest_db()
 
@@ -68,13 +51,9 @@ def add_user(message):
     connection = sqlite3.connect("restaurant.db")
     cursor = connection.cursor()
 
-    cursor.execute(
-        "INSERT OR IGNORE INTO users (tg_id, name) VALUES (?, ?)",
-        (user_id, user_name)
-    )
+    cursor.execute("INSERT OR IGNORE INTO users (tg_id, name) VALUES (?, ?)", (user_id, user_name))
 
     connection.commit()
-    connection.close()
 
     bot.send_message(user_id, "ti zapisan")
 
@@ -154,16 +133,9 @@ def want_table(message):
         return
 
     markup = types.InlineKeyboardMarkup()
-
     for i in tables_av:
         table_id = i[0]
-        markup.add(
-            types.InlineKeyboardButton(
-                text=f"Стол {table_id}",
-                callback_data=f"table_{table_id}"
-            )
-        )
-
+        markup.add(types.InlineKeyboardButton(text=f"Стол {table_id}", callback_data=f"table_{table_id}"))
     bot.send_message(chat_id, "Выберите стол:", reply_markup=markup)
 
 @bot.message_handler(commands=['start_menu'])
@@ -183,5 +155,19 @@ def main_menu(message):
         reply_markup=keyboard
     )
 
+@bot.message_handler(commands=['add_table'])
+def add_table(message):
+    chat_id = message.chat.id
+
+    connection = sqlite3.connect("restaurant.db")
+    cursor = connection.cursor()
+
+    cursor.execute("INSERT INTO tables (is_free) VALUES (1)")
+
+    cursor.execute("SELECT COUNT(*) FROM tables")
+    total_tables = cursor.fetchone()[0]
+
+    connection.commit()
+    bot.send_message(chat_id, f"Стол добавлен. Всего: {total_tables}")
 
 bot.polling()
