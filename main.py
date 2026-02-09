@@ -3,7 +3,7 @@ import telebot
 from telebot import types
 import random
 
-bot = telebot.TeleBot("api")
+bot = telebot.TeleBot("")
 
 user_data = {}
 
